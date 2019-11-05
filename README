@@ -28,3 +28,14 @@ There are no package downloads yet, so to install you'll need to clone the repos
 	installpkg ../sboutils-1.0-noarch-notag.txz
 
 If you do this as root you don't need to pipe yes in to makepkg.
+
+
+Uninstallation:
+Removing the sboutils package still leaves behind the logfile, any repositories. To completely remove any trace of sboutils from your computer, remove
+directories
+
+	/var/sboutils
+	/var/log/sboutils
+
+Uninstalling sboutils will not uninstall any SlackBuilds.
+
