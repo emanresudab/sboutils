@@ -1,0 +1,30 @@
+Synopsis:
+Packages are build and installed with installsbo, and removed with removesbo.
+Local copies of a SlackBuilds repository are managed with sboutil, you'll need
+to uncomment or add a repositry in /etc/sboutils/repositories then run
+
+	sboutil --sync-repository
+
+If running installsbo/sboutil yeilds a "No repository specified" error, you'll
+need to specify which one you want to use in /etc/sboutils/repositories with
+the instructions at the top of the file.
+
+Package names are the category followed by a forward slash, then the program name (IE graphics/feh). If you aren't sure what category the program you want is
+in, or aren't certain you have the name right, you can use
+
+	sboutil --search <term>
+
+to search the repository.
+
+Make sure you read the manpages as well, this is only a brief explination.
+
+
+Installation:
+There are no package downloads yet, so to install you'll need to clone the repository and run makepkg.
+
+	git clone https://github.com/emanresudab/sboutils
+	cd sboutils
+	yes | makepkg ../sboutils-1.0-noarch-notag.txz
+	installpkg ../sboutils-1.0-noarch-notag.txz
+
+If you do this as root you don't need to pipe yes in to makepkg.
