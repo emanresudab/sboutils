@@ -9,7 +9,8 @@ If running installsbo/sboutil yeilds a "No repository specified" error, you'll
 need to specify which one you want to use in /etc/sboutils/repositories with
 the instructions at the top of the file.
 
-Package names are the category followed by a forward slash, then the program name (IE graphics/feh). If you aren't sure what category the program you want is
+Package names are the category followed by a forward slash, then the program
+name (IE graphics/feh). If you aren't sure what category the program you want is
 in, or aren't certain you have the name right, you can use
 
 	sboutil --search <term>
@@ -20,7 +21,8 @@ Make sure you read the manpages as well, this is only a brief explination.
 
 
 Installation:
-There are no package downloads yet, so to install you'll need to clone the repository and run makepkg.
+There are no package downloads yet, so to install you'll need to clone the
+repository and run makepkg.
 
 	git clone https://github.com/emanresudab/sboutils
 	cd sboutils
@@ -31,8 +33,9 @@ If you do this as root you don't need to pipe yes in to makepkg.
 
 
 Uninstallation:
-Removing the sboutils package still leaves behind the logfile, any repositories. To completely remove any trace of sboutils from your computer, remove
-directories
+Removing the sboutils package still leaves behind the logfile, any
+repositories. To completely remove any trace of sboutils from your computer,
+remove the directories
 
 	/var/sboutils
 	/var/log/sboutils
