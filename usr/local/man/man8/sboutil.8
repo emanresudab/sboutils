@@ -1,0 +1,51 @@
+.TH sboutils 8 sboutils
+.SH NAME
+sboutil - manage multiple local minstances of the SlackBuilds repository
+.SH SYNTOPSIS
+.B sboutil
+[--list-installed] [--list-repositories] [--sync-repository] [--download-all-sources] [--download-source <package>] [--changelog] [--repository <repository>]
+.SH DESCRIPTION
+.B sboutil
+is used for managing the different local instances of the SlackBuilds repositories directly. If you want to preemptively download the source to a package, download all sources to al packages, view the changelog, list tracked repositories, sync a repository, or list the installed packages, you do it through the
+.B sboutil
+command.
+.SH OPTIONS
+.B --list-installed
+.br
+	List all installed packages.
+
+.br
+.br
+.B --list-repositories
+.br
+	List all repositories defined in
+.B /etc/sboutils/repositories.
+
+.br
+.B --sync-repository
+.br
+	Sync the repository with the remote copy.
+
+.br
+.B --download-all-sources
+.br
+	Download all sources, to all packages.
+
+.br
+.B --download-source <package>
+.br
+	Download the source to one package.
+
+.br
+.B --changelog
+.br
+	View the repository changelog.
+
+.br
+.B --repository <name>
+.br
+	Don't use the active repository defined in
+.B /etc/sboutils/repositories,
+use the specified repository.
+.SH SEE ALSO
+.B sboutils(8), installsbo(8), removesbo(8)

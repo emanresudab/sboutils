@@ -1,0 +1,22 @@
+.TH sboutils 8 sboutils
+.SH NAME
+installsbo - build and install SlackBuilds
+.SH SYNTOPSIS
+.B sboutil
+[--build] [--resolve-dependencies] [--repository] <package>
+.SH DESCRIPTION
+.B installsbo
+builds the specified SlackBuild and installs the resulting package.
+.SH OPTIONS
+.B --build
+.br
+        Don't install the package, only build it.
+
+.br
+.B --repository <name>
+.br
+        Don't use the active repository defined in
+.B /etc/sboutils/repositories,
+use the specified repository.
+.SH SEE ALSO
+.B sboutils(8), sboutil(8), removesbo(8)

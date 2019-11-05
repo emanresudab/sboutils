@@ -1,0 +1,27 @@
+# /etc/sboutils/repositories
+
+# To set the currently active repository (I.e. the repository automatically
+# used when no --repository flag is supplied, append a * to the end of the
+# line. Make sure the URL and * are seperated by some sort of whitespace.
+
+# Any repository here will work, but sboutils will assume it's contents are
+# correctly stored. Packages are looked for in the repository folder, so
+# "desktop/screenfetch" is expanded to "$REPODIR/$REPONAME/desktop/screenfetch,
+# where $REPONAME is the name of the active repository (see above), and
+# $REPODIR is the value defined in /etc/sboutils/sboutils.conf
+
+# Supported repo utilities are rsync and git, but if you know what you're doing
+# it's easy to add in your own. If you do this, please consider opening up a
+# pull request on the github page :)
+
+# Name		TOOL	URL
+#14.2		rsync	rsync://slackbuilds.org/slackbuilds/14.2 *
+#14.1		rsync	rsync://slackbuilds.org/slackbuilds/14.1
+#14.0		rsync	rsync://slackbuilds.org/slackbuilds/14.0
+#13.37		rsync	rsync://slackbuilds.org/slackbuilds/13.37
+#13.1		rsync	rsync://slackbuilds.org/slackbuilds/13.1
+#13.0		rsync	rsync://slackbuilds.org/slackbuilds/13.0
+#12.2		rsync	rsync://slackbuilds.org/slackbuilds/12.2
+#12.1		rsync	rsync://slackbuilds.org/slackbuilds/12.1
+#12.0		rsync	rsync://slackbuilds.org/slackbuilds/12.0
+#11.0		rsync	rsync://slackbuilds.org/slackbuilds/11.0

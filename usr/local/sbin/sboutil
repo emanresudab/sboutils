@@ -1,0 +1,176 @@
+#!/bin/sh
+
+if [ -z "$(sed '/#/d;/^\s*$/d' /etc/sboutils/repositories)" ]; then
+cat << EOF
+
+It looks like you're running sboutils for the first time, before going any
+further, you'll need to visit /etc/sboutils/repositories and either uncomment
+one repository or add your own.
+
+You can switch your active repository (you'll need to do this at least once) by
+completing the above and following the instructions in
+/etc/sboutils/repositories.
+
+EOF
+exit 0
+fi
+
+# Source configuration file
+. /etc/sboutils/sboutils.conf
+
+REPOSITORY=$(sed -n '/#/d;/*$/s/\s\+/ /gp' /etc/sboutils/repositories)
+
+usage() {
+cat << EOF
+Usage: sboutil <action>
+
+options:	--search <package>
+			Find a package in the repository.
+		--list-installed
+			List all installed slackbuilds.
+		--list-repositories
+			List all repositories.
+		--sync-repository
+			Sync the repository.
+		--download-all-sources
+			Download all package sources.
+		--download-source <package>
+			Download the source to a package.
+		--repository <name>
+			Specify an alternate repository.
+		--changelog
+			View the changelog of a repository.
+		--destroy
+			Delete all synced repository files.
+EOF
+}
+
+[ $# -eq 0 ] && usage && exit 0 # no arguments
+
+# parse options
+while [ $# -gt 0 ]; do
+	if [ $1 = "--list-installed" ]; then
+		cat $LOGFILE
+		exit
+	elif [ $1 = "--list-repositories" ]; then
+		printf "Name\t\ttool\tURL\n"
+		sed '/^#/d;/^\s*$/d' /etc/sboutils/repositories
+		exit
+	elif [ $1 = "--repository" -a $# -gt 1 ]; then
+		REPOSITORY=$(sed -n '/$2/s/\s\+/ /gp' /etc/sboutils/repositories)
+		[ -z $REPOSITORY ] && printf "Repository \"$2\" does not exist\n" && exit 2
+		shift 2
+	# these options are susceptable to --repository, so we'll use functions
+	elif [ $1 = "--search" -a $# -gt 1 ]; then
+		FUNC=search
+		ARG=$2
+		shift 2
+	elif [ $1 = "--changelog" ]; then
+		FUNC=view_changelog
+		shift
+	elif [ $1 = "--sync-repository" ]; then
+		FUNC=sync_repository
+		shift
+	elif [ $1 = "--download-all-sources" ]; then
+		FUNC=download_all_sources
+		shift
+	elif [ $1 = "--download-source" -a $# -gt 1 ]; then
+		FUNC=download_package_source
+		ARG=$2
+		shift 2
+	elif [ $1 = "--destroy" ]; then
+		FUNC=destroy_repository
+		shift
+	else
+		usage
+		exit
+	fi
+done
+
+[ -z "$REPOSITORY" ] && printf "No repository specified\n" && exit 4
+
+search() {
+	find $REPODIR/$REPONAME -name "*${1}*" -maxdepth 2 | sed '/.tar*/d' | awk -F/ '{print $6"/"$7}'
+}
+
+destroy_repository() {
+	rm -rf $REPODIR/$REPONAME
+}
+
+view_changelog() {
+	cat $REPODIR/$REPONAME/ChangeLog.txt | less
+}
+
+sync_repository() {
+	printf "Syncing repository with $TOOL\n"
+	if [ "$TOOL" = "rsync" ]; then
+		[ -d $REPODIR/$REPONAME ] && UPDATE="--update" || mkdir $REPODIR/$REPONAME
+		rsync -av $UPDATE $URL/ $REPODIR/$REPONAME
+	elif [ "$TOOL" = "git" ]; then
+		[ -d $REPODIR/$REPONAME ] && ACTION=pull || ACTION=clone
+		printf "$REPONAME already exists, pulling new changes\n"
+
+		git $ACTION -v $URL $REPODIR/$REPONAME
+	else
+		printf "Unrecognized utility: \"$TOOL\"\n"
+	fi
+}
+
+download_package_source() {
+	# Source info file
+	. ${1}$(basename $1).info
+
+	if [ "$SYSARCH" = "x86_64" ]; then
+		[ "$DOWNLOAD_x86_64" = "UNSUPPORTED" ] && printf "x86_64 unsupported\n" && exit 3
+		# If the download is arch dependent
+		if [ ! -z "$DOWNLOAD_x86_64" ]; then
+			DOWNLOAD=$DOWNLOAD_x86_64
+			MD5SUM=$MD5SUM_x86_64
+		fi
+
+		# We can reasonably conclude that $DOWNLOAD_x86_64 is empty
+	fi
+
+	# Compare checksums
+	[ -z MD5SUM ] && printf "No checksum provided\n" && return
+
+	for position in $(seq 1 $(echo $DOWNLOAD | wc -w)); do
+		url=$(echo $DOWNLOAD | cut -d\  -f$position)
+		sum=$(echo $MD5SUM | cut -d\  -f$position)
+
+		if [ -e ${1}$(basename $url) ]; then
+			if [ "$sum" != "$(md5sum ${1}$(basename $url) | cut -d\  -f1)" ]; then
+				printf "Warning! mismatching checksums for $(basename $url)\n"
+			fi
+		else
+			printf "Downloaded source file does not match the URL, skipping checksum check\n"
+		fi
+	done
+
+	wget $WFLAGS -N $1 -P $1 $DOWNLOAD
+}
+
+download_all_sources() {
+	for pkg in $REPODIR/$REPONAME/*/*/; do
+		download_package_source $pkg
+	done
+}
+
+REPONAME=$(echo $REPOSITORY | cut -d\  -f1)
+TOOL=$(echo $REPOSITORY | cut -d\  -f2)
+URL=$(echo $REPOSITORY | cut -d\  -f3)
+
+# Verify package exists (if we're downloading a specific source)
+if [ "$FUNC" = "download_package_source" ]; then
+	if [ -d $REPODIR/$REPONAME/$ARG/ ]; then
+		ARG=$REPODIR/$REPONAME/$ARG/
+	else
+		printf "Package \"$ARG\" does not exist.\n"
+	fi
+fi
+
+
+# $FUNC expands to the function name we want to use, $ARG expands to
+# nothing if it hasn't been defined, so it's only useful twice
+$FUNC $ARG
+exit 0

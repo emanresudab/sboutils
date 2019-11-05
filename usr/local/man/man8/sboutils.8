@@ -1,0 +1,37 @@
+.TH sboutils 8 sboutils
+.SH NAME
+sboutils - simple package management for SlackBuilds.org
+.SH DESCRIPTION
+.B sboutils
+is a very simple package manager for any slackbuilds repository. Repositories are defined in
+.B /etc/sboutils/repositories
+and stored in
+.B /var/sboutils/repositories.
+Currently,
+.B git
+and
+.B rsync
+are the supported tools for syncing the local and remote repository.
+.SH FILES
+.B /etc/sboutils/sboutils.conf
+.br
+	Main configuration file.
+
+.br
+.B /etc/sboutils/repositories
+.br
+	Where repositories are defined.
+
+.br
+.B /var/sboutils/repositories
+.br
+	Where repositories are stored.
+
+.br
+.B /var/log/sboutils/installed_packages
+.br
+	Where installed packages are logged.
+
+.br
+.SH SEE ALSO
+.B sboutil(8), installsbo(8), removesbo(8)

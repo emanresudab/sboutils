@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Source configuration file
+. /etc/sboutils/sboutils.conf
+
+usage() {
+cat << EOF
+Usage: removesbo <package>
+
+EOF
+}
+
+# Is it really installed?
+[ $(grep -c "^$1\$" $LOGFILE) -lt 1 ] && printf "Package not installed\n" && exit 0
+
+# Update the log
+sed -i "\:$1:d" $LOGFILE
+
+# Remove the package
+removepkg $(basename $1)
+exit 0

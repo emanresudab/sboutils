@@ -1,0 +1,102 @@
+#!/bin/sh
+
+# Source configuration file
+. /etc/sboutils/sboutils.conf
+
+REPONAME=$(sed -n '/#/d;/*$/s/\s\+/ /gp' /etc/sboutils/repositories | cut -d\  -f1)
+
+usage() {
+cat << EOF
+Usage: installsbo [options] <package>
+
+options:	--build
+			Don't install the package, only build it.
+		--repository
+			Specify an alternate repository.
+EOF
+}
+
+# parse options
+while [ $# -gt 1 ]; do
+	if [ $1 = "--build" ]; then
+		INSTALL=false
+		shift
+	elif [ $1 = "--repository" -a $# -gt 1 ]; then
+		REPONAME=$2
+		shift 2
+	else
+		usage
+		exit
+	fi
+done
+
+[ -z "$REPOSITORY" ] && echo "No repository specified\n" && exit 4
+
+eval_response () {
+	read response
+	response=$(echo $response | tr [a-z] [A-Z])
+	[ $response != $"Y" -a $response != "YES" ] 2> /dev/null && exit 0
+}
+
+# Does the package exist?
+[ ! -d "$REPODIR/$REPONAME" ] && printf "Repository \"$REPODIR/$REPONAME\" does not exist\n" && exit 2
+[ ! -d "$REPODIR/$REPONAME/$1" ] && printf "Package \"$1\" does not exist\n" && exit 1
+
+# Is it already installed?
+[ $(grep -c "^$1\$" $LOGFILE) -gt 0 ] && printf "Package already installed\n" && exit 0
+
+# Check architecture
+if [ "$SYSARCH" = "x86_64" ]; then
+	[ "$DOWNLOAD_x86_64" = "UNSUPPORTED" ] && printf "x8_64 unsupported\n" && exit 3
+	# If the download is arch dependent
+	if [ ! -z "$DOWNLOAD_x86_64" ]; then
+		DOWNLOAD=$DOWNLOAD_x86_64
+		MD5SUM=$MD5SUM_x86_64
+	fi
+
+	# We can reasonably conclude that $DOWNLOAD_x86_64 is empty
+else
+	[ "$DOWNLOAD" = "UNSUPPORTED" ] && printf "$SYSARCH unsupported\n" && exit 3
+fi
+
+# Source info file
+PACKAGEPATH=$REPODIR/$REPONAME/$1
+. $PACKAGEPATH/$(basename $1).info
+
+# Check that the source has been downloaded and the checksums match
+COUNT=$(echo $DOWNLOAD | wc -w)
+for position in $(seq 1 $COUNT); do
+	url=$(echo $DOWNLOAD | cut -d\  -f$position)
+	sum=$(echo $MD5SUM | cut -d\  -f$position)
+
+	printf "Verifying source\t${position}/${COUNT}\n"
+
+	if [ ! -e $PACKAGEPATH/$(basename $url) ]; then
+		printf "Source file $(basename $url) does not exist\n"
+		printf "Download it now? n/Y: "
+		eval_response
+
+		wget $WFLAGS -N -P $PACKAGEPATH $url
+	fi
+
+	[ -z "$MD5SUM" ] && printf "No checksum provided\n" && continue
+	if [ "$sum" != "$(md5sum $PACKAGEPATH/$(basename $url) | cut -d\  -f1)" ]; then
+		printf "Mismatching checksums for $(basename $url)\n"
+		printf "Downloaded: $(md5sum $PACKAGEPATH/$(basename $url) | cut -d\  -f1)\n"
+		printf "Provided: $sum\n"
+		printf "Continue? n/Y: "
+		eval_response
+	fi
+done
+
+# Build the package
+cd $PACKAGEPATH
+. $PACKAGEPATH/$(basename $1).SlackBuild
+
+[ "$INSTALL" = "false" ] && exit 0
+
+# Install the package
+installpkg $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz}
+
+echo $1 >> $LOGFILE
+exit 0
