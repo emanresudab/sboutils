@@ -45,9 +45,13 @@ eval_response () {
 # Is it already installed?
 [ $(grep -c "^$1\$" $LOGFILE) -gt 0 ] && printf "Package already installed\n" && exit 0
 
+# Source info file
+PACKAGEPATH=$REPODIR/$REPONAME/$1
+. $PACKAGEPATH/$(basename $1).info
+
 # Check architecture
 if [ "$SYSARCH" = "x86_64" ]; then
-	[ "$DOWNLOAD_x86_64" = "UNSUPPORTED" ] && printf "x8_64 unsupported\n" && exit 3
+	[ "$DOWNLOAD_x86_64" = "UNSUPPORTED" ] && printf "x86_64 unsupported\n" && exit 3
 	# If the download is arch dependent
 	if [ ! -z "$DOWNLOAD_x86_64" ]; then
 		DOWNLOAD=$DOWNLOAD_x86_64
@@ -58,10 +62,6 @@ if [ "$SYSARCH" = "x86_64" ]; then
 else
 	[ "$DOWNLOAD" = "UNSUPPORTED" ] && printf "$SYSARCH unsupported\n" && exit 3
 fi
-
-# Source info file
-PACKAGEPATH=$REPODIR/$REPONAME/$1
-. $PACKAGEPATH/$(basename $1).info
 
 # Check that the source has been downloaded and the checksums match
 COUNT=$(echo $DOWNLOAD | wc -w)
